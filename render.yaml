@@ -4,10 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port 10000"
-    autoDeploy: true
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
-      - key: PORT
-        value: "10000"
       - key: DATABASE_URL
-        sync: false  # Luego lo completás en Render con tu string de conexión a PostgreSQL
+        value: "postgresql://r2:H425iN91es9wnXG0n787h886CsjMm5gr@dpg-d1mlj0u3jp1c73dqtn7g-a.oregon-postgres.render.com/dbr2"
