@@ -1,20 +1,25 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
-class UserCreate(BaseModel):
-    id: int
-    first_name: Optional[str]
-    username: Optional[str]
-    language_code: Optional[str]
-    email: Optional[str] = None
 
-class UserOut(BaseModel):
+class UserBase(BaseModel):
+    telegram_id: int
+    first_name: Optional[str] = None
+    username: Optional[str] = None
+    language_code: Optional[str] = "es"
+    email: Optional[EmailStr] = None
+    plan: Optional[str] = "free"
+    is_verified: Optional[bool] = False
+
+
+class UserCreate(UserBase):
+    pass
+
+
+class UserInDB(UserBase):
     id: int
-    first_name: Optional[str]
-    username: Optional[str]
-    email: Optional[str]
-    plan: str
-    is_verified: bool
+    created_at: datetime
 
     class Config:
         orm_mode = True
