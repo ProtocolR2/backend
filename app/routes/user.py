@@ -1,21 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.schemas.user import UserCreate, UserOut
-from app.crud.user import get_user, create_user
-from app.database import SessionLocal
+from app.crud import user as user_crud
+from app.database import get_db
 
-router = APIRouter()
+router = APIRouter(prefix="/api/users", tags=["users"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@router.post("/", response_model=UserOut)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = user_crud.get_user_by_telegram_id(db, user.telegram_id)
+    if db_user:
+        raise HTTPException(status_code=400, detail="El usuario ya está registrado.")
+    return user_crud.create_user(db, user)
 
-@router.post("/users", response_model=UserOut)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    existing = get_user(db, user.id)
-    if existing:
-        return existing
-    return create_user(db, user)
+@router.get("/{telegram_id}", response_model=UserOut)
+def get_user(telegram_id: int, db: Session = Depends(get_db)):
+    db_user = user_crud.get_user_by_telegram_id(db, telegram_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    return db_user
