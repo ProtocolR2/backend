@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from app.routes import user
-from app.database import Base, engine
 
-app = FastAPI()
+app = FastAPI(title="Protocolo R2 Backend")
 
-# Crear tablas en la DB al iniciar
-Base.metadata.create_all(bind=engine)
-
-# Rutas
+# Incluir rutas
 app.include_router(user.router)
+
+# Ruta de prueba
+@app.get("/")
+def read_root():
+    return {"message": "🚀 Backend del Protocolo R2 en funcionamiento."}
