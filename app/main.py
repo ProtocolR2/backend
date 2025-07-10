@@ -3,7 +3,7 @@ from app.routes import user
 
 app = FastAPI(title="Protocolo R2 Backend")
 
-# Incluir rutas
+# Incluir rutas del usuario
 app.include_router(user.router)
 
 # Ruta de prueba
