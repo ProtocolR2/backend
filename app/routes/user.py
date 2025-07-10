@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from app.schemas.user import UserCreate, UserOut
 from app.crud import user as user_crud
 from app.database import get_db
@@ -12,8 +13,11 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = user_crud.get_user_by_telegram_id(db, user.telegram_id)
     if db_user:
         raise HTTPException(status_code=400, detail="El usuario ya está registrado.")
-    # Crear nuevo usuario
-    return user_crud.create_user(db, user)
+    # Crear nuevo usuario con manejo de errores
+    try:
+        return user_crud.create_user(db, user)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Error interno al crear usuario.")
 
 @router.get("/{telegram_id}", response_model=UserOut)
 def get_user(telegram_id: int, db: Session = Depends(get_db)):
