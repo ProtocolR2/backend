@@ -19,7 +19,7 @@ class UserInDB(UserBase):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # Pydantic v2 reemplaza orm_mode
+        from_attributes = True  # Para Pydantic v2
 
 class UserOut(UserInDB):
     pass
