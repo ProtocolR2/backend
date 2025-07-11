@@ -5,3 +5,6 @@ asyncpg
 pydantic[email]
 python-dotenv
 psycopg2-binary
+pandas
+gspread
+oauth2client
