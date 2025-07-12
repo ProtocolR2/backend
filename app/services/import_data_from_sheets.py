@@ -8,7 +8,7 @@ from app.models.mensaje import Mensaje
 from app.models.plan import Plan
 
 # 1. Configuración de credenciales
-SSCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 creds_dict = json.loads(os.getenv("GOOGLE_CREDS_JSON"))
 credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 client = gspread.authorize(credentials)
