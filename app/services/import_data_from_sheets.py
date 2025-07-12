@@ -15,8 +15,10 @@ client = gspread.authorize(credentials)
 
 # 2. Función para importar recetas
 def importar_recetas(db: Session):
-    sheet = client.openall()[0]  # Abre el primer documento disponible
-print("✅ Documento accedido:", sheet.title)
+    # TEST: abrir el primer documento disponible
+    sheet = client.openall()[0]  # Abre el primer documento compartido
+    print("✅ Documento accedido:", sheet.title)
+
     data = sheet.get_all_records()
 
     db.query(Receta).delete()
@@ -34,6 +36,7 @@ print("✅ Documento accedido:", sheet.title)
         )
         db.add(receta)
     db.commit()
+
 
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
