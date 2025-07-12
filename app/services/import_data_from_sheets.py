@@ -15,7 +15,8 @@ client = gspread.authorize(credentials)
 
 # 2. Función para importar recetas
 def importar_recetas(db: Session):
-    sheet = client.open("Programa 21 Días R2").sheet1
+    sheet = client.openall()[0]  # Abre el primer documento disponible
+print("✅ Documento accedido:", sheet.title)
     data = sheet.get_all_records()
 
     db.query(Receta).delete()
