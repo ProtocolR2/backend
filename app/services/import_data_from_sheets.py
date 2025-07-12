@@ -15,11 +15,9 @@ client = gspread.authorize(credentials)
 
 # 2. Función para importar recetas
 def importar_recetas(db: Session):
-    # TEST: abrir el primer documento disponible
-    sheet = client.openall()[0]  # Abre el primer documento compartido
-    print("✅ Documento accedido:", sheet.title)
-
-    data = sheet.get_all_records()
+    spreadsheet = client.open("Programa 21 Días R2")
+    worksheet = spreadsheet.sheet1
+    data = worksheet.get_all_records()
 
     db.query(Receta).delete()
 
@@ -37,11 +35,11 @@ def importar_recetas(db: Session):
         db.add(receta)
     db.commit()
 
-
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
-    sheet = client.open("Mensajería R2_Bot").sheet1
-    data = sheet.get_all_records()
+    spreadsheet = client.open("Mensajería R2_Bot")
+    worksheet = spreadsheet.sheet1
+    data = worksheet.get_all_records()
 
     db.query(Mensaje).delete()
 
@@ -57,23 +55,4 @@ def importar_mensajes(db: Session):
 
 # 4. Función para importar planes
 def importar_planes(db: Session):
-    sheet = client.open("Plan Mantenimiento 365").sheet1
-    data = sheet.get_all_records()
-
-    db.query(Plan).delete()
-
-    for row in data:
-        plan = Plan(
-            nombre=row["nombre"],
-            duracion_dias=int(row["duracion_dias"]),
-            descripcion=row.get("descripcion", ""),
-            idioma=row.get("idioma", "es"),
-        )
-        db.add(plan)
-    db.commit()
-
-# 5. Función general para importar todo
-def importar_todo_desde_sheets(db: Session):
-    importar_recetas(db)
-    importar_mensajes(db)
-    importar_planes(db)
+    sp
