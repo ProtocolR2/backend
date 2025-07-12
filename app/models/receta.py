@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from app.database import Base
 
 class Receta(Base):
@@ -6,8 +6,10 @@ class Receta(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     dia = Column(Integer, nullable=False)
-    tipo = Column(String, nullable=False)  # Breakfast, Lunch, Dinner
-    nombre = Column(String, nullable=False)
-    ingredientes = Column(String, nullable=False)
-    instrucciones = Column(String, nullable=False)
-    imagen_url = Column(String, nullable=False)
+    tipo_comida = Column(String, nullable=False)  # Breakfast, Lunch, Dinner
+    idioma = Column(String, default="es")  # 'es' o 'en'
+    titulo = Column(String, nullable=False)
+    descripcion = Column(Text)
+    ingredientes = Column(Text)
+    instrucciones = Column(Text)
+    imagen_url = Column(Text)  # opcional
