@@ -1,4 +1,6 @@
 import gspread
+import os
+import json
 from google.oauth2.service_account import Credentials
 from sqlalchemy.orm import Session
 from app.models.receta import Receta
@@ -7,11 +9,8 @@ from app.models.plan import Plan
 
 # 1. Configuración de credenciales
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-SERVICE_ACCOUNT_FILE = "google_creds.json"  # Asegurate de subirlo si estás en Render
-
-credentials = Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
-)
+creds_dict = json.loads(os.getenv("GOOGLE_CREDS_JSON"))
+credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 client = gspread.authorize(credentials)
 
 # 2. Función para importar recetas
