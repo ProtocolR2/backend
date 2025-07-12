@@ -1,1 +1,76 @@
+import gspread
+from google.oauth2.service_account import Credentials
+from sqlalchemy.orm import Session
+from app.models.receta import Receta
+from app.models.mensaje import Mensaje
+from app.models.plan import Plan
 
+# 1. Configuración de credenciales
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SERVICE_ACCOUNT_FILE = "google_creds.json"  # Asegurate de subirlo si estás en Render
+
+credentials = Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+)
+client = gspread.authorize(credentials)
+
+# 2. Función para importar recetas
+def importar_recetas(db: Session):
+    sheet = client.open("Programa 21 Días R2").sheet1
+    data = sheet.get_all_records()
+
+    db.query(Receta).delete()
+
+    for row in data:
+        receta = Receta(
+            dia=int(row["dia"]),
+            tipo_comida=row["tipo_comida"],
+            idioma=row.get("idioma", "es"),
+            titulo=row["titulo"],
+            descripcion=row.get("descripcion", ""),
+            ingredientes=row.get("ingredientes", ""),
+            instrucciones=row.get("instrucciones", ""),
+            imagen_url=row.get("imagen_url", "")
+        )
+        db.add(receta)
+    db.commit()
+
+# 3. Función para importar mensajes
+def importar_mensajes(db: Session):
+    sheet = client.open("Mensajería R2_Bot").sheet1
+    data = sheet.get_all_records()
+
+    db.query(Mensaje).delete()
+
+    for row in data:
+        mensaje = Mensaje(
+            hora=row["hora"],
+            tipo=row.get("tipo", "recordatorio"),
+            idioma=row.get("idioma", "es"),
+            contenido=row["contenido"]
+        )
+        db.add(mensaje)
+    db.commit()
+
+# 4. Función para importar planes
+def importar_planes(db: Session):
+    sheet = client.open("Plan Mantenimiento 365").sheet1
+    data = sheet.get_all_records()
+
+    db.query(Plan).delete()
+
+    for row in data:
+        plan = Plan(
+            nombre=row["nombre"],
+            duracion_dias=int(row["duracion_dias"]),
+            descripcion=row.get("descripcion", ""),
+            idioma=row.get("idioma", "es"),
+        )
+        db.add(plan)
+    db.commit()
+
+# 5. Función general para importar todo
+def importar_todo_desde_sheets(db: Session):
+    importar_recetas(db)
+    importar_mensajes(db)
+    importar_planes(db)
