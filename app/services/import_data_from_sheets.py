@@ -46,39 +46,57 @@ def importar_recetas(db: Session):
 
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
-    spreadsheet = client.open("Mensajería R2_Bot")
-    worksheet = spreadsheet.sheet1
-    data = worksheet.get_all_records()
+    try:
+        spreadsheet = client.open("Mensajería R2_Bot")
+        sheet = spreadsheet.sheet1
+        print("✅ Documento accedido:", spreadsheet.title)
 
-    db.query(Mensaje).delete()
+        data = sheet.get_all_records()
 
-    for row in data:
-        mensaje = Mensaje(
-            hora=row["hora"],
-            tipo=row.get("tipo", "recordatorio"),
-            idioma=row.get("idioma", "es"),
-            contenido=row["contenido"]
-        )
-        db.add(mensaje)
-    db.commit()
+        db.query(Mensaje).delete()
+
+        for row in data:
+            mensaje = Mensaje(
+                hora=row["hora"],
+                tipo=row.get("tipo", "recordatorio"),
+                idioma=row.get("idioma", "es"),
+                contenido=row["contenido"]
+            )
+            db.add(mensaje)
+
+        db.commit()
+        print("✅ Mensajes importados con éxito")
+
+    except Exception as e:
+        print("❌ Error al importar mensajes:", e)
+        raise
 
 # 4. Función para importar planes
 def importar_planes(db: Session):
-    spreadsheet = client.open("Plan Mantenimiento 365")
-    worksheet = spreadsheet.sheet1
-    data = worksheet.get_all_records()
+    try:
+        spreadsheet = client.open("Plan Mantenimiento 365")
+        sheet = spreadsheet.sheet1
+        print("✅ Documento accedido:", spreadsheet.title)
 
-    db.query(Plan).delete()
+        data = sheet.get_all_records()
 
-    for row in data:
-        plan = Plan(
-            nombre=row["nombre"],
-            duracion_dias=int(row["duracion_dias"]),
-            descripcion=row.get("descripcion", ""),
-            idioma=row.get("idioma", "es"),
-        )
-        db.add(plan)
-    db.commit()
+        db.query(Plan).delete()
+
+        for row in data:
+            plan = Plan(
+                nombre=row["nombre"],
+                duracion_dias=int(row["duracion_dias"]),
+                descripcion=row.get("descripcion", ""),
+                idioma=row.get("idioma", "es"),
+            )
+            db.add(plan)
+
+        db.commit()
+        print("✅ Planes importados con éxito")
+
+    except Exception as e:
+        print("❌ Error al importar planes:", e)
+        raise
 
 # 5. Función general para importar todo
 def importar_todo_desde_sheets(db: Session):
