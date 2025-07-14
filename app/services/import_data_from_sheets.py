@@ -36,6 +36,10 @@ def importar_recetas(db: Session):
         )
         db.add(receta)
     db.commit()
+    print("✅ Recetas importadas con éxito")
+except Exception as e:
+    print("❌ Error al importar recetas:", e)
+    raise
 
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
