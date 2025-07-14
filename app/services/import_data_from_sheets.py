@@ -55,4 +55,24 @@ def importar_mensajes(db: Session):
 
 # 4. Función para importar planes
 def importar_planes(db: Session):
-    sp
+    spreadsheet = client.open("Plan Mantenimiento 365")
+    worksheet = spreadsheet.sheet1
+    data = worksheet.get_all_records()
+
+    db.query(Plan).delete()
+
+    for row in data:
+        plan = Plan(
+            nombre=row["nombre"],
+            duracion_dias=int(row["duracion_dias"]),
+            descripcion=row.get("descripcion", ""),
+            idioma=row.get("idioma", "es"),
+        )
+        db.add(plan)
+    db.commit()
+
+# 5. Función general para importar todo
+def importar_todo_desde_sheets(db: Session):
+    importar_recetas(db)
+    importar_mensajes(db)
+    importar_planes(db)
