@@ -15,31 +15,34 @@ client = gspread.authorize(credentials)
 
 # 2. Función para importar recetas
 def importar_recetas(db: Session):
-    spreadsheet = client.open("Programa 21 Días R2")
-    sheet = spreadsheet.sheet1
-    print("✅ Documento accedido:", spreadsheet.title)
+    try:
+        spreadsheet = client.open("Programa 21 Días R2")
+        sheet = spreadsheet.sheet1
+        print("✅ Documento accedido:", spreadsheet.title)
 
-    data = sheet.get_all_records()
+        data = sheet.get_all_records()
 
-    db.query(Receta).delete()
+        db.query(Receta).delete()
 
-    for row in data:
-        receta = Receta(
-            dia=int(row["dia"]),
-            tipo_comida=row["tipo_comida"],
-            idioma=row.get("idioma", "es"),
-            titulo=row["titulo"],
-            descripcion=row.get("descripcion", ""),
-            ingredientes=row.get("ingredientes", ""),
-            instrucciones=row.get("instrucciones", ""),
-            imagen_url=row.get("imagen_url", "")
-        )
-        db.add(receta)
-    db.commit()
-    print("✅ Recetas importadas con éxito")
-except Exception as e:
-    print("❌ Error al importar recetas:", e)
-    raise
+        for row in data:
+            receta = Receta(
+                dia=int(row["dia"]),
+                tipo_comida=row["tipo_comida"],
+                idioma=row.get("idioma", "es"),
+                titulo=row["titulo"],
+                descripcion=row.get("descripcion", ""),
+                ingredientes=row.get("ingredientes", ""),
+                instrucciones=row.get("instrucciones", ""),
+                imagen_url=row.get("imagen_url", "")
+            )
+            db.add(receta)
+
+        db.commit()
+        print("✅ Recetas importadas con éxito")
+
+    except Exception as e:
+        print("❌ Error al importar recetas:", e)
+        raise
 
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
