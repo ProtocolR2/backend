@@ -20,25 +20,43 @@ def importar_recetas(db: Session):
         sheet = spreadsheet.sheet1
         print("✅ Documento accedido:", spreadsheet.title)
 
-        data = sheet.get_all_records()
+        rows = sheet.get_all_values()
+        encabezado = rows[0]
+        dias = encabezado[2:]  # ['Día 1', 'Día 2', ..., 'Día 21']
 
+        recetas = []
+
+        # Limpiar recetas existentes antes de insertar nuevas
         db.query(Receta).delete()
 
-        for row in data:
-            receta = Receta(
-                dia=int(row["dia"]),
-                tipo_comida=row["tipo_comida"],
-                idioma=row.get("idioma", "es"),
-                titulo=row["titulo"],
-                descripcion=row.get("descripcion", ""),
-                ingredientes=row.get("ingredientes", ""),
-                instrucciones=row.get("instrucciones", ""),
-                imagen_url=row.get("imagen_url", "")
-            )
-            db.add(receta)
+        for fila in rows[1:]:
+            hora = fila[0]
+            tipo_comida = fila[1]
+
+            for i, valor in enumerate(fila[2:]):
+                if not valor:
+                    continue  # Saltar celdas vacías
+
+                dia_str = dias[i]
+                dia_num = int(dia_str.replace("Día ", "").strip())
+
+                receta = Receta(
+                    dia=dia_num,
+                    tipo_comida=tipo_comida,
+                    hora=hora,
+                    idioma="es",
+                    titulo=valor.strip(),
+                    descripcion="",
+                    ingredientes="",
+                    instrucciones="",
+                    imagen_url=""
+                )
+
+                db.add(receta)
+                recetas.append(receta)
 
         db.commit()
-        print("✅ Recetas importadas con éxito")
+        print(f"✅ Se importaron {len(recetas)} recetas desde Google Sheets")
 
     except Exception as e:
         print("❌ Error al importar recetas:", e)
