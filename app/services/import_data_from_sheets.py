@@ -22,36 +22,40 @@ def importar_recetas(db: Session):
 
         rows = sheet.get_all_values()
         encabezado = rows[0]
-        dias = encabezado[2:]  # ['Día 1', 'Día 2', ..., 'Día 21']
+
+        # Detectar columnas de días e imágenes
+        dias = []
+        for i in range(2, len(encabezado), 2):  # Salta de 2 en 2 (día, imagen)
+            dia_texto = encabezado[i]
+            if "Día" in dia_texto or "Dia" in dia_texto:
+                dia_num = int(dia_texto.replace("Día", "").replace("Dia", "").strip())
+                dias.append((i, dia_num))  # (posición en la fila, número de día)
 
         recetas = []
-
-        # Limpiar recetas existentes antes de insertar nuevas
-        db.query(Receta).delete()
+        db.query(Receta).delete()  # Limpia la tabla antes
 
         for fila in rows[1:]:
             hora = fila[0]
             tipo_comida = fila[1]
 
-            for i, valor in enumerate(fila[2:]):
-                if not valor:
-                    continue  # Saltar celdas vacías
+            for col_index, dia_num in dias:
+                titulo = fila[col_index].strip() if len(fila) > col_index and fila[col_index] else ""
+                imagen_url = fila[col_index + 1].strip() if len(fila) > col_index + 1 and fila[col_index + 1] else ""
 
-                dia_str = dias[i]
-                dia_num = int(dia_str.replace("Día ", "").replace("Dia ", "").strip())
+                if not titulo:
+                    continue  # Saltar si no hay título
 
                 receta = Receta(
                     dia=dia_num,
                     tipo_comida=tipo_comida,
                     hora=hora,
                     idioma="es",
-                    titulo=valor.strip(),
+                    titulo=titulo,
                     descripcion="",
                     ingredientes="",
                     instrucciones="",
-                    imagen_url=""
+                    imagen_url=imagen_url
                 )
-
                 db.add(receta)
                 recetas.append(receta)
 
