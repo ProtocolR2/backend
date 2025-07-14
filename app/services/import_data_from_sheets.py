@@ -38,7 +38,7 @@ def importar_recetas(db: Session):
                     continue  # Saltar celdas vacías
 
                 dia_str = dias[i]
-                dia_num = int(dia_str.replace("Día ", "").strip())
+                dia_num = int(dia_str.replace("Día ", "").replace("Dia ", "").strip())
 
                 receta = Receta(
                     dia=dia_num,
