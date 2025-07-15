@@ -25,3 +25,27 @@ def backup_todo(db: Session):
     backup_tabla(db, Receta, "recetas_backup.json")
     backup_tabla(db, Mensaje, "mensajes_backup.json")
     backup_tabla(db, Plan, "planes_backup.json")
+
+def restaurar_tabla_desde_backup(db: Session, modelo, nombre_archivo):
+    from app.database import engine
+    modelo.__table__.drop(bind=engine, checkfirst=True)
+    Base.metadata.create_all(bind=engine)
+
+    path = os.path.join(BACKUP_DIR, nombre_archivo)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"No se encontró el archivo {path}")
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    for item in data:
+        obj = modelo(**item)
+        db.add(obj)
+
+    db.commit()
+    print(f"🔄 Restaurado {len(data)} registros desde {nombre_archivo}")
+
+def restaurar_todo_desde_backup(db: Session):
+    restaurar_tabla_desde_backup(db, Receta, "recetas_backup.json")
+    restaurar_tabla_desde_backup(db, Mensaje, "mensajes_backup.json")
+    restaurar_tabla_desde_backup(db, Plan, "planes_backup.json")
