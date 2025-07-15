@@ -5,6 +5,7 @@ from starlette.status import HTTP_403_FORBIDDEN
 from app.database import get_db, Base, engine
 from app.models import receta, mensaje, plan
 from app.services.import_data_from_sheets import importar_todo_desde_sheets
+from app.services.backup_data import backup_todo  # 👈 nuevo import
 
 import os
 
@@ -25,5 +26,14 @@ async def init_db(request: Request):
     if secret != os.getenv("INIT_SECRET"):
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="No autorizado")
 
+@router.post("/backup")
+def backup(request: Request, db: Session = Depends(get_db)):
+    secret = request.headers.get("x-init-secret")
+    if secret != os.getenv("INIT_SECRET"):
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="No autorizado")
+
+    backup_todo(db)
+    return {"status": "✅ Backup realizado correctamente"}
+    
     Base.metadata.create_all(bind=engine)
     return {"status": "✅ Tablas creadas correctamente"}
