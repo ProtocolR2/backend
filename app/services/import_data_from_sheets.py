@@ -16,45 +16,46 @@ client = gspread.authorize(credentials)
 # 2. Función para importar recetas
 def importar_recetas(db: Session):
     try:
+        # Asegurarnos que la tabla tenga la estructura correcta
+        from app.models.receta import Receta
+        from app.database import engine
+
+        Receta.__table__.drop(bind=engine, checkfirst=True)
+        Base.metadata.create_all(bind=engine)
+
         spreadsheet = client.open("Programa 21 Días R2")
         sheet = spreadsheet.sheet1
         print("✅ Documento accedido:", spreadsheet.title)
 
         rows = sheet.get_all_values()
         encabezado = rows[0]
-
-        # Detectar columnas de días e imágenes
-        dias = []
-        for i in range(2, len(encabezado), 2):  # Salta de 2 en 2 (día, imagen)
-            dia_texto = encabezado[i]
-            if "Día" in dia_texto or "Dia" in dia_texto:
-                dia_num = int(dia_texto.replace("Día", "").replace("Dia", "").strip())
-                dias.append((i, dia_num))  # (posición en la fila, número de día)
+        dias = encabezado[2:]
 
         recetas = []
-        db.query(Receta).delete()  # Limpia la tabla antes
 
         for fila in rows[1:]:
-            hora = fila[0]
+            hora = fila[0] if fila[0] else ""
             tipo_comida = fila[1]
 
-            for col_index, dia_num in dias:
-                titulo = fila[col_index].strip() if len(fila) > col_index and fila[col_index] else ""
-                imagen_url = fila[col_index + 1].strip() if len(fila) > col_index + 1 and fila[col_index + 1] else ""
+            for i in range(0, len(dias), 2):  # Día N y Día N img
+                dia_str = dias[i].replace("Día ", "").replace("Dia ", "").strip()
+                if not dia_str.isdigit():
+                    continue
+
+                dia_num = int(dia_str)
+                titulo = fila[2 + i].strip() if 2 + i < len(fila) else ""
+                imagen_url = fila[2 + i + 1].strip() if 2 + i + 1 < len(fila) else ""
 
                 if not titulo:
                     continue  # Saltar si no hay título
 
                 receta = Receta(
                     dia=dia_num,
-                    tipo_comida=tipo_comida,
                     hora=hora,
-                    idioma="es",
+                    instancia=tipo_comida,
                     titulo=titulo,
-                    descripcion="",
-                    ingredientes="",
-                    instrucciones="",
-                    imagen_url=imagen_url
+                    imagen_url=imagen_url,
+                    idioma="es"
                 )
                 db.add(receta)
                 recetas.append(receta)
