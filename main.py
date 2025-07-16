@@ -26,3 +26,7 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"status": "ok", "lang_default": DEFAULT_LANGUAGE}
+
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
