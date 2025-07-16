@@ -1,4 +1,4 @@
-import gspread
+iimport gspread
 import os
 import json
 from google.oauth2.service_account import Credentials
@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.receta import Receta
 from app.models.mensaje import Mensaje
 from app.models.plan import Plan
+from app.database import Base, engine
 
 # 1. Configuración de credenciales
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
@@ -17,8 +18,6 @@ client = gspread.authorize(credentials)
 def importar_recetas(db: Session):
     try:
         # Asegurarnos que la tabla tenga la estructura correcta
-        from app.models.receta import Receta
-        from app.database import engine
 
         Receta.__table__.drop(bind=engine, checkfirst=True)
         Base.metadata.create_all(bind=engine)
