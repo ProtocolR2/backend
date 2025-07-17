@@ -78,14 +78,15 @@ def importar_mensajes(db: Session):
         db.query(Mensaje).delete()
 
         for row in data:
-            mensaje = Mensaje(
-                hora=row["hora"],
-                tipo=row.get("tipo", "recordatorio"),
-                idioma=row.get("idioma", "es"),
-                contenido=row["contenido"]
-            )
-            db.add(mensaje)
-
+    if row.get("activo", "").strip().lower() == "sí":
+        mensaje = Mensaje(
+            dia=int(row["día"]),
+            hora=row["hora"],
+            idioma=row.get("idioma", "es").lower(),
+            contenido=row["mensaje"]
+        )
+        db.add(mensaje)
+        
         db.commit()
         print("✅ Mensajes importados con éxito")
 
