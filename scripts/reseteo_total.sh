@@ -8,8 +8,16 @@ echo "Creando tablas..."
 curl -X POST "$BACKEND_URL/admin/init-db" -H "x-init-secret: $SECRET"
 echo -e "\n"
 
-echo "Importando datos desde Google Sheets..."
+echo "Importando recetas desde Google Sheets..."
 curl -X POST "$BACKEND_URL/admin/importar-recetas" -H "x-init-secret: $SECRET"
+echo -e "\n"
+
+echo "Importando mensajes desde Google Sheets..."
+curl -X POST "$BACKEND_URL/admin/importar-mensajes" -H "x-init-secret: $SECRET"
+echo -e "\n"
+
+echo "Importando planes desde Google Sheets..."
+curl -X POST "$BACKEND_URL/admin/importar-planes" -H "x-init-secret: $SECRET"
 echo -e "\n"
 
 echo "Realizando backup..."
