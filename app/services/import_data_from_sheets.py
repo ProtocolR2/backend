@@ -68,31 +68,30 @@ def importar_recetas(db: Session):
 
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
-    try:
-        spreadsheet = client.open("Mensajería R2_Bot")
-        sheet = spreadsheet.sheet1
-        print("✅ Documento accedido:", spreadsheet.title)
+    sheet_id = SHEET_ID_MENSAJES
+    data = leer_google_sheet(sheet_id)
 
-        data = sheet.get_all_records()
+    mensajes = []
+    for row in data:
+        if row.get("activo", "").strip().lower() == "sí":
+            try:
+                mensaje = Mensaje(
+                    dia=int(row["día"]),
+                    hora=row["hora"],
+                    idioma=row.get("idioma", "es").lower(),
+                    contenido=row["mensaje"]
+                )
+                mensajes.append(mensaje)
+            except Exception as e:
+                print(f"❌ Error al procesar fila: {row} - {e}")
 
-        db.query(Mensaje).delete()
-
-        for row in data:
-    if row.get("activo", "").strip().lower() == "sí":
-        mensaje = Mensaje(
-            dia=int(row["día"]),
-            hora=row["hora"],
-            idioma=row.get("idioma", "es").lower(),
-            contenido=row["mensaje"]
-        )
-        db.add(mensaje)
-        
+    if mensajes:
+        db.query(Mensaje).delete()  # Limpia tabla antes de importar
+        db.add_all(mensajes)
         db.commit()
-        print("✅ Mensajes importados con éxito")
-
-    except Exception as e:
-        print("❌ Error al importar mensajes:", e)
-        raise
+        print(f"✅ Se importaron {len(mensajes)} mensajes")
+    else:
+        print("⚠️ No se importaron mensajes (ninguno marcado como 'sí')")
 
 # 4. Función para importar planes
 def importar_planes(db: Session):
