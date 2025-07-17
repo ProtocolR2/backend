@@ -18,8 +18,6 @@ client = gspread.authorize(credentials)
 # 2. Función para importar recetas
 def importar_recetas(db: Session):
     try:
-        # Asegurarnos que la tabla tenga la estructura correcta
-
         Receta.__table__.drop(bind=engine, checkfirst=True)
         Base.metadata.create_all(bind=engine)
 
@@ -47,7 +45,7 @@ def importar_recetas(db: Session):
                 imagen_url = fila[2 + i + 1].strip() if 2 + i + 1 < len(fila) else ""
 
                 if not titulo:
-                    continue  # Saltar si no hay título
+                    continue
 
                 receta = Receta(
                     dia=dia_num,
@@ -69,35 +67,43 @@ def importar_recetas(db: Session):
 
 # 3. Función para importar mensajes
 def importar_mensajes(db: Session):
-    sheet_id = SHEET_ID_MENSAJES
-    data = leer_google_sheet(sheet_id)
+    try:
+        spreadsheet = client.open("Mensajería R2_Bot")
+        sheet = spreadsheet.sheet1
+        print("✅ Documento accedido:", spreadsheet.title)
 
-    mensajes = []
-for row in data:
-    if row.get("activo", "").strip().lower() == "sí":
-        try:
-            idioma = row.get("idioma", "es").strip().lower()
-            if idioma not in IDIOMAS_SOPORTADOS:
-                print(f"⚠️ Idioma no soportado: {idioma} en fila {row}")
-                continue
+        data = sheet.get_all_records()
+        mensajes = []
 
-            mensaje = Mensaje(
-                dia=int(row["día"]),
-                hora=row["hora"],
-                idioma=idioma,
-                contenido=row["mensaje"]
-            )
-            mensajes.append(mensaje)
-        except Exception as e:
-            print(f"❌ Error al procesar fila: {row} - {e}")
+        for row in data:
+            if row.get("activo", "").strip().lower() == "sí":
+                try:
+                    idioma = row.get("idioma", "es").strip().lower()
+                    if idioma not in IDIOMAS_SOPORTADOS:
+                        print(f"⚠️ Idioma no soportado: {idioma} en fila {row}")
+                        continue
 
-    if mensajes:
-        db.query(Mensaje).delete()  # Limpia tabla antes de importar
-        db.add_all(mensajes)
-        db.commit()
-        print(f"✅ Se importaron {len(mensajes)} mensajes")
-    else:
-        print("⚠️ No se importaron mensajes (ninguno marcado como 'sí')")
+                    mensaje = Mensaje(
+                        dia=int(row["día"]),
+                        hora=row["hora"],
+                        idioma=idioma,
+                        contenido=row["mensaje"]
+                    )
+                    mensajes.append(mensaje)
+                except Exception as e:
+                    print(f"❌ Error al procesar fila: {row} - {e}")
+
+        if mensajes:
+            db.query(Mensaje).delete()
+            db.add_all(mensajes)
+            db.commit()
+            print(f"✅ Se importaron {len(mensajes)} mensajes")
+        else:
+            print("⚠️ No se importaron mensajes (ninguno marcado como 'sí')")
+
+    except Exception as e:
+        print("❌ Error al importar mensajes:", e)
+        raise
 
 # 4. Función para importar planes
 def importar_planes(db: Session):
@@ -107,7 +113,6 @@ def importar_planes(db: Session):
         print("✅ Documento accedido:", spreadsheet.title)
 
         data = sheet.get_all_records()
-
         db.query(Plan).delete()
 
         for row in data:
