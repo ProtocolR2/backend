@@ -7,6 +7,7 @@ from app.models.receta import Receta
 from app.models.mensaje import Mensaje
 from app.models.plan import Plan
 from app.database import Base, engine
+from app.config import IDIOMAS_SOPORTADOS
 
 # 1. Configuración de credenciales
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
@@ -72,18 +73,23 @@ def importar_mensajes(db: Session):
     data = leer_google_sheet(sheet_id)
 
     mensajes = []
-    for row in data:
-        if row.get("activo", "").strip().lower() == "sí":
-            try:
-                mensaje = Mensaje(
-                    dia=int(row["día"]),
-                    hora=row["hora"],
-                    idioma=row.get("idioma", "es").lower(),
-                    contenido=row["mensaje"]
-                )
-                mensajes.append(mensaje)
-            except Exception as e:
-                print(f"❌ Error al procesar fila: {row} - {e}")
+for row in data:
+    if row.get("activo", "").strip().lower() == "sí":
+        try:
+            idioma = row.get("idioma", "es").strip().lower()
+            if idioma not in IDIOMAS_SOPORTADOS:
+                print(f"⚠️ Idioma no soportado: {idioma} en fila {row}")
+                continue
+
+            mensaje = Mensaje(
+                dia=int(row["día"]),
+                hora=row["hora"],
+                idioma=idioma,
+                contenido=row["mensaje"]
+            )
+            mensajes.append(mensaje)
+        except Exception as e:
+            print(f"❌ Error al procesar fila: {row} - {e}")
 
     if mensajes:
         db.query(Mensaje).delete()  # Limpia tabla antes de importar
