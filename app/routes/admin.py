@@ -56,12 +56,20 @@ def importar_planes_endpoint(request: Request, db: Session = Depends(get_db)):
     importar_planes(db)
     return {"status": "✅ Planes importados correctamente"}
 
-@router.post("/importar-recetas-mantenimiento")
+# ——————————————————————————————————————————————————————————
+# Importar solo recetas de mantenimiento (365 días)
+# ——————————————————————————————————————————————————————————
+@router.post("/importar-mantenimiento")
 def importar_mantenimiento_endpoint(request: Request, db: Session = Depends(get_db)):
-    verificar_autorizacion(request)
+    """
+    Importa las recetas del plan de mantenimiento 365 desde Google Sheets.
+    Utiliza la pestaña horizontal. Salta celdas vacías.
+    """
     from app.services.import_data_from_sheets import importar_recetas_mantenimiento
+
+    verificar_autorizacion(request)
     importar_recetas_mantenimiento(db)
-    return {"status": "✅ Recetas de mantenimiento importadas"}
+    return {"status": "✅ Recetas de mantenimiento importadas correctamente"}
 
 # ——————————————————————————————————————————————————————————
 # Gestión de tablas
