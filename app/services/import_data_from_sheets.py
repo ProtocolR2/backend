@@ -82,6 +82,10 @@ def importar_recetas(db: Session):
 
 def importar_mensajes(db: Session):
     try:
+        # 💥 Elimina y recrea la tabla mensajes (estructura actualizada del modelo)
+        Mensaje.__table__.drop(bind=engine, checkfirst=True)
+        Base.metadata.create_all(bind=engine)
+        
         # Abre la hoja usando el ID (variable: SHEET_ID_MENSAJES)
         sheet_id = os.getenv("SHEET_ID_MENSAJES")
         spreadsheet = client.open_by_key(sheet_id)
