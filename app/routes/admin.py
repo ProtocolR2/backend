@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, Request, HTTPException
 from starlette.status import HTTP_403_FORBIDDEN
 from sqlalchemy.orm import Session
@@ -54,6 +55,13 @@ def importar_planes_endpoint(request: Request, db: Session = Depends(get_db)):
     verificar_autorizacion(request)
     importar_planes(db)
     return {"status": "✅ Planes importados correctamente"}
+
+@router.post("/importar-recetas-mantenimiento")
+def importar_mantenimiento_endpoint(request: Request, db: Session = Depends(get_db)):
+    verificar_autorizacion(request)
+    from app.services.import_data_from_sheets import importar_recetas_mantenimiento
+    importar_recetas_mantenimiento(db)
+    return {"status": "✅ Recetas de mantenimiento importadas"}
 
 # ——————————————————————————————————————————————————————————
 # Gestión de tablas
