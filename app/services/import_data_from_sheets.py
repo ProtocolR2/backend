@@ -157,7 +157,71 @@ def importar_planes(db: Session):
         raise
 
 # ------------------------------------------
-# 5. Función general para importar todo
+# 6. Función para importar Plan Mantenimiento 365
+# ------------------------------------------
+
+def importar_recetas_mantenimiento(db: Session):
+    """
+    Importa el Plan Mantenimiento 365 (formato horizontal) a la tabla recetas_mantenimiento.
+    Salta celdas sin título, así puedes ir completando la hoja de a poco.
+    """
+    try:
+        # ¡Borramos y recreamos la tabla!
+        from app.models.receta_mantenimiento import RecetaMantenimiento
+        RecetaMantenimiento.__table__.drop(bind=engine, checkfirst=True)
+        Base.metadata.create_all(bind=engine)
+
+        sheet_id = os.getenv("SHEET_ID_PLANES")  # MISMA hoja que ya tienes, solo otra pestaña
+        spreadsheet = client.open_by_key(sheet_id)
+        sheet = spreadsheet.sheet1
+        print("✅ Documento accedido:", spreadsheet.title)
+
+        rows = sheet.get_all_values()
+        encabezado = rows[0]            # Instancia | Día 1 | Día 1 Img | Día 2 | Día 2 Img | …
+        dias = encabezado[1:]           # desde la segunda columna
+
+        recetas = []
+
+        for fila in rows[1:]:
+            instancia = fila[0] or ""   # Columna A
+            # si la fila está vacía, seguimos
+            if not instancia.strip():
+                continue
+
+            for i in range(0, len(dias), 2):  # Día N y Día N Img
+                dia_label = dias[i]
+                if not dia_label.startswith("Día"):
+                    continue
+
+                dia_num = int(dia_label.replace("Día", "").strip())
+                titulo = fila[1 + i].strip() if 1 + i < len(fila) else ""
+                imagen_url = fila[1 + i + 1].strip() if 1 + i + 1 < len(fila) else ""
+
+                # Salta si el título está vacío (aún no completaste esa celda)
+                if not titulo:
+                    continue
+
+                # Puedes parsear hora a partir de instancia o ponerla vacía por ahora
+                receta = RecetaMantenimiento(
+                    dia=dia_num,
+                    hora="",                     # Poner hora si la incluyes en otra columna
+                    instancia=instancia,
+                    titulo=titulo,
+                    imagen_url=imagen_url,
+                    idioma="es"
+                )
+                db.add(receta)
+                recetas.append(receta)
+
+        db.commit()
+        print(f"✅ Se importaron {len(recetas)} recetas de mantenimiento")
+
+    except Exception as e:
+        print("❌ Error al importar mantenimiento:", e)
+        raise
+
+# ------------------------------------------
+# 7. Función general para importar todo
 # Usada por el endpoint /admin/importar-recetas (total)
 # ------------------------------------------
 
@@ -165,3 +229,4 @@ def importar_todo_desde_sheets(db: Session):
     importar_recetas(db)
     importar_mensajes(db)
     importar_planes(db)
+    importar_recetas_mantenimiento(db)
