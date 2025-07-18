@@ -9,25 +9,36 @@ from app.models.plan import Plan
 from app.database import Base, engine
 from app.config import IDIOMAS_SOPORTADOS
 
-# 1. Configuración de credenciales
+# ------------------------------------------
+# 1. Configuración de Google Sheets
+# ------------------------------------------
+
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+
+# Cargar credenciales del entorno (variable: GOOGLE_CREDS_JSON)
 creds_dict = json.loads(os.getenv("GOOGLE_CREDS_JSON"))
 credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 client = gspread.authorize(credentials)
 
-# 2. Función para importar recetas
+# ------------------------------------------
+# 2. Importar Recetas (usando ID de hoja)
+# ------------------------------------------
+
 def importar_recetas(db: Session):
     try:
+        # Reinicia la tabla (DROP + CREATE)
         Receta.__table__.drop(bind=engine, checkfirst=True)
         Base.metadata.create_all(bind=engine)
 
-        spreadsheet = client.open("Programa 21 Días R2")
-        sheet = spreadsheet.sheet1
+        # Abre la hoja usando el ID (variable: SHEET_ID_RECETAS)
+        sheet_id = os.getenv("SHEET_ID_RECETAS")
+        spreadsheet = client.open_by_key(sheet_id)
         print("✅ Documento accedido:", spreadsheet.title)
+        sheet = spreadsheet.sheet1
 
         rows = sheet.get_all_values()
         encabezado = rows[0]
-        dias = encabezado[2:]
+        dias = encabezado[2:]  # columnas a partir de la tercera
 
         recetas = []
 
@@ -45,7 +56,7 @@ def importar_recetas(db: Session):
                 imagen_url = fila[2 + i + 1].strip() if 2 + i + 1 < len(fila) else ""
 
                 if not titulo:
-                    continue
+                    continue  # salta si está vacío
 
                 receta = Receta(
                     dia=dia_num,
@@ -65,12 +76,17 @@ def importar_recetas(db: Session):
         print("❌ Error al importar recetas:", e)
         raise
 
-# 3. Función para importar mensajes
+# ------------------------------------------
+# 3. Importar Mensajes
+# ------------------------------------------
+
 def importar_mensajes(db: Session):
     try:
-        spreadsheet = client.open("Mensajería R2_Bot")
-        sheet = spreadsheet.sheet1
+        # Abre la hoja usando el ID (variable: SHEET_ID_MENSAJES)
+        sheet_id = os.getenv("SHEET_ID_MENSAJES")
+        spreadsheet = client.open_by_key(sheet_id)
         print("✅ Documento accedido:", spreadsheet.title)
+        sheet = spreadsheet.sheet1
 
         data = sheet.get_all_records()
         mensajes = []
@@ -105,12 +121,17 @@ def importar_mensajes(db: Session):
         print("❌ Error al importar mensajes:", e)
         raise
 
-# 4. Función para importar planes
+# ------------------------------------------
+# 4. Importar Planes (Plan Mantenimiento 365)
+# ------------------------------------------
+
 def importar_planes(db: Session):
     try:
-        spreadsheet = client.open("Plan Mantenimiento 365")
-        sheet = spreadsheet.sheet1
+        # Abre la hoja usando el ID (variable: SHEET_ID_PLANES)
+        sheet_id = os.getenv("SHEET_ID_PLANES")
+        spreadsheet = client.open_by_key(sheet_id)
         print("✅ Documento accedido:", spreadsheet.title)
+        sheet = spreadsheet.sheet1
 
         data = sheet.get_all_records()
         db.query(Plan).delete()
@@ -131,7 +152,11 @@ def importar_planes(db: Session):
         print("❌ Error al importar planes:", e)
         raise
 
+# ------------------------------------------
 # 5. Función general para importar todo
+# Usada por el endpoint /admin/importar-recetas (total)
+# ------------------------------------------
+
 def importar_todo_desde_sheets(db: Session):
     importar_recetas(db)
     importar_mensajes(db)
