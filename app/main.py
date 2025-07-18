@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from app.routes import user
 from app.routes import admin  # 👈 NUEVO: importamos las rutas admin
 from app.routes import visualizacion # ver las tablas en postman
-
-app.include_router(visualizacion.router)
+from app.routes import resumen
 
 app = FastAPI(title="Protocolo R2 Backend")
+app.include_router(resumen.router)
+app.include_router(visualizacion.router)
 
 # Incluir rutas del usuario
 app.include_router(user.router)
