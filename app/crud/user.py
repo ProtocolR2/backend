@@ -56,7 +56,6 @@ def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpda
         logger.error(f"Error actualizando usuario en DB: {e}")
         raise
 
-
 def activate_user(db: Session, user: models.User):
     """
     Marca al usuario como verificado, asigna fecha y borra el token.
@@ -73,3 +72,23 @@ def activate_user(db: Session, user: models.User):
         db.rollback()
         logger.error(f"Error activando usuario: {e}")
         raise
+@router.get("/activar-cuenta")
+def activar_usuario(telegram_id: int, token: str, db: Session = Depends(get_db)):
+    """
+    Endpoint para activar la cuenta con un token válido.
+    Usado por /start <token> en el bot.
+    """
+    user = user_crud.get_user_by_telegram_id(db, telegram_id)
+    if not user or user.token != token:
+        raise HTTPException(status_code=400, detail="Token inválido o usuario no encontrado.")
+
+    user.is_verified = True
+    user.fecha_activacion = datetime.utcnow()
+    user.token = None
+
+    try:
+        db.commit()
+        return {"status": "ok", "message": "Usuario activado correctamente."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al activar usuario: {e}")
