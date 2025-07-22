@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import BaseModel
-from app.schemas.user import UserCreate, UserOut, UserUpdate
+from app.schemas.user import UserCreate, UserOut
 from app.crud import user as user_crud
 from app.database import get_db
 from datetime import datetime
@@ -65,6 +65,40 @@ def activar_usuario(data: TokenActivationRequest, db: Session = Depends(get_db))
 
     user_crud.activate_user(db, user)
     return {"status": "ok", "message": "Usuario activado correctamente"}
+
+
+@router.post("/notificar-usuarios-inactivos")
+def notificar_usuarios_lentos(db: Session = Depends(get_db)):
+    hoy = datetime.utcnow()
+    mensajes_enviados = []
+
+    usuarios = db.query(user_crud.User).filter(user_crud.User.fecha_activacion.isnot(None)).all()
+
+    for usuario in usuarios:
+        dias_usados = (hoy - usuario.fecha_activacion).days
+
+        if dias_usados in [5, 10, 15, 20, 30, 40, 50]:
+            mensajes_enviados.append({
+                "telegram_id": usuario.telegram_id,
+                "mensaje": f"Hola {usuario.nombre}, ¡vamos que podés! Hace {dias_usados} días que activaste el protocolo R2 y aún no avanzaste. Recordá que tenés 60 días para completarlo. 💪"
+            })
+        elif dias_usados == 55:
+            mensajes_enviados.append({
+                "telegram_id": usuario.telegram_id,
+                "mensaje": f"Hola {usuario.nombre}, tu acceso al Protocolo R2 vence en 5 días. ¡Aprovechá al máximo este tiempo! 🚀"
+            })
+        elif dias_usados == 60:
+            mensajes_enviados.append({
+                "telegram_id": usuario.telegram_id,
+                "mensaje": (
+                    "⏳ Tu acceso al Protocolo R2 ha vencido (pasaron 60 días desde que lo activaste).\n\n"
+                    "🎁 Pero no todo está perdido. Te ofrecemos una **segunda oportunidad** para hacer el programa completo por sólo *19 €* (precio original: 39 €). ¡Es ahora o nunca!\n\n"
+                    "📆 Y si ya completaste el protocolo o querés mantener tus hábitos saludables, pronto estará disponible el **Plan de Mantenimiento 365 días**.\n\n"
+                    "📨 Te enviaremos la información directamente a tu mail registrado. ¡Ánimo! 💪"
+                )
+            })
+
+    return {"notificaciones": mensajes_enviados}
 
 
 @router.get("/{telegram_id}", response_model=UserOut)
