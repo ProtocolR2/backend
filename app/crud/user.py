@@ -6,8 +6,17 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 def get_user_by_telegram_id(db: Session, telegram_id: int):
     return db.query(models.User).filter(models.User.telegram_id == telegram_id).first()
+
+
+def get_user_by_token(db: Session, token: str):
+    """
+    Busca un usuario que tenga el token asignado.
+    """
+    return db.query(models.User).filter(models.User.token == token).first()
+
 
 def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
@@ -32,6 +41,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         logger.error(f"Error creando usuario en DB: {e}")
         raise
 
+
 def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
     if user_update.first_name is not None:
         db_user.first_name = user_update.first_name
@@ -44,4 +54,22 @@ def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpda
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error actualizando usuario en DB: {e}")
+        raise
+
+
+def activate_user(db: Session, user: models.User):
+    """
+    Marca al usuario como verificado, asigna fecha y borra el token.
+    """
+    user.is_verified = True
+    user.fecha_activacion = datetime.utcnow()
+    user.token = None  # opcional: dejarlo si no querés permitir reutilización
+
+    try:
+        db.commit()
+        db.refresh(user)
+        return user
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error activando usuario: {e}")
         raise
