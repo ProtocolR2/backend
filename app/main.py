@@ -3,6 +3,12 @@ from app.routes import user
 from app.routes import admin
 from app.routes import visualizacion
 from app.routes import resumen
+from app.routes import mensajes
+
+...
+
+app.include_router(mensajes.router)
+
 
 # Nueva línea para setup
 from app.routes import setup  
