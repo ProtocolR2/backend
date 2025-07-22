@@ -29,4 +29,5 @@ class UserInDB(UserBase):
         from_attributes = True  # Para Pydantic v2
 
 class UserOut(UserInDB):
-    pass
+    expirado: bool
+
