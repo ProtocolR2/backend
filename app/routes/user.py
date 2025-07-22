@@ -1,11 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import BaseModel
 from app.schemas.user import UserCreate, UserOut, UserUpdate
 from app.crud import user as user_crud
 from app.database import get_db
+from datetime import datetime
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+
+# 🔐 Modelo para activación por token
+class TokenActivationRequest(BaseModel):
+    telegram_id: int
+    token: str
+
 
 @router.post("/registrar-usuario", response_model=UserOut)
 def registrar_usuario(user: UserCreate, db: Session = Depends(get_db)):
@@ -21,6 +30,7 @@ def registrar_usuario(user: UserCreate, db: Session = Depends(get_db)):
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Error al crear usuario: {str(e)}")
 
+
 @router.post("/registrar-telegram")
 def registrar_telegram(user_data: UserCreate, db: Session = Depends(get_db)):
     """
@@ -35,6 +45,27 @@ def registrar_telegram(user_data: UserCreate, db: Session = Depends(get_db)):
         return {"status": "ok", "message": "Usuario registrado correctamente."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al registrar usuario: {str(e)}")
+
+
+@router.post("/activar")
+def activar_usuario(data: TokenActivationRequest, db: Session = Depends(get_db)):
+    """
+    Activa un usuario por token si es válido y coincide con su telegram_id.
+    """
+    user = user_crud.get_user_by_token(db, data.token)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Token inválido o ya utilizado")
+
+    if user.telegram_id != data.telegram_id:
+        raise HTTPException(status_code=400, detail="Token no corresponde a este usuario")
+
+    if user.is_verified:
+        return {"status": "ok", "message": "Usuario ya estaba activado."}
+
+    user_crud.activate_user(db, user)
+    return {"status": "ok", "message": "Usuario activado correctamente"}
+
 
 @router.get("/{telegram_id}", response_model=UserOut)
 def get_user(telegram_id: int, db: Session = Depends(get_db)):
