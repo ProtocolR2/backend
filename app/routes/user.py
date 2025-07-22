@@ -92,21 +92,4 @@ def notificar_usuarios_lentos(db: Session = Depends(get_db)):
                 "telegram_id": usuario.telegram_id,
                 "mensaje": (
                     "⏳ Tu acceso al Protocolo R2 ha vencido (pasaron 60 días desde que lo activaste).\n\n"
-                    "🎁 Pero no todo está perdido. Te ofrecemos una **segunda oportunidad** para hacer el programa completo por sólo *19 €* (precio original: 39 €). ¡Es ahora o nunca!\n\n"
-                    "📆 Y si ya completaste el protocolo o querés mantener tus hábitos saludables, pronto estará disponible el **Plan de Mantenimiento 365 días**.\n\n"
-                    "📨 Te enviaremos la información directamente a tu mail registrado. ¡Ánimo! 💪"
-                )
-            })
-
-    return {"notificaciones": mensajes_enviados}
-
-
-@router.get("/{telegram_id}", response_model=UserOut)
-def get_user(telegram_id: int, db: Session = Depends(get_db)):
-    """
-    Trae el usuario desde su Telegram ID. Usado por el bot.
-    """
-    db_user = user_crud.get_user_by_telegram_id(db, telegram_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    return db_user
+                    "🎁 Pero no todo está perdido. Te ofrecemos
