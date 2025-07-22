@@ -8,3 +8,4 @@ psycopg2-binary
 pandas
 gspread
 oauth2client
+python-telegram-bot==13.15
