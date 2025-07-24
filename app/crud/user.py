@@ -29,8 +29,8 @@ def create_user(db: Session, user: schemas.UserCreate):
         username=user.username,
         language_code=user.language_code,
         email=user.email,
-        plan=user.plan,
-        is_verified=user.is_verified,
+        plan=user.plan or "free",
+        is_verified=user.is_verified or False,
         token=user.token,
         fecha_activacion=user.fecha_activacion,
         horario_envio=user.horario_envio,
@@ -46,6 +46,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         db.rollback()
         logger.error(f"Error creando usuario en DB: {e}")
         raise
+
 
 def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
     if user_update.first_name is not None:
