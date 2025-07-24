@@ -1,33 +1,30 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from pydantic import BaseModel
+from typing import Optional, List
 from datetime import datetime, time
 
 class UserBase(BaseModel):
-    telegram_id: int
-    first_name: Optional[str] = None
-    username: Optional[str] = None
-    language_code: Optional[str] = "es"
-    email: Optional[EmailStr] = None
+    first_name: Optional[str]
+    username: Optional[str]
+    language_code: Optional[str]
+    email: Optional[str]
     plan: Optional[str] = "free"
     is_verified: Optional[bool] = False
-    token: Optional[str] = None
-    fecha_activacion: Optional[datetime] = None
-    horario_envio: Optional[time] = None
+    telegram_id: Optional[int]
+    token: Optional[str]
+    fecha_activacion: Optional[datetime]
+    horario_envio: Optional[time]
+    cliente_id: Optional[str]
+    programas_activos: Optional[List[str]] = ["R2"]
 
 class UserCreate(UserBase):
     pass
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    horario_envio: Optional[time] = None
+    first_name: Optional[str]
+    horario_envio: Optional[time]
 
-class UserInDB(UserBase):
+class User(UserBase):
     id: int
-    created_at: datetime
 
     class Config:
-        from_attributes = True  # Para Pydantic v2
-
-class UserOut(UserInDB):
-    expirado: bool
-
+        orm_mode = True
