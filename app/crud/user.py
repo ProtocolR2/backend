@@ -18,6 +18,11 @@ def get_user_by_token(db: Session, token: str):
 
 
 def create_user(db: Session, user: schemas.UserCreate):
+    # Generar cliente_id automático tipo R20001
+    last_user = db.query(models.User).order_by(models.User.id.desc()).first()
+    next_number = 1 if not last_user else last_user.id + 1
+    cliente_id = f"R2{next_number:04d}"
+
     db_user = models.User(
         telegram_id=user.telegram_id,
         first_name=user.first_name,
@@ -29,6 +34,8 @@ def create_user(db: Session, user: schemas.UserCreate):
         token=user.token,
         fecha_activacion=user.fecha_activacion,
         horario_envio=user.horario_envio,
+        cliente_id=cliente_id,
+        programas_activos=user.programas_activos or ["R2"],
     )
     try:
         db.add(db_user)
@@ -39,7 +46,6 @@ def create_user(db: Session, user: schemas.UserCreate):
         db.rollback()
         logger.error(f"Error creando usuario en DB: {e}")
         raise
-
 
 def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
     if user_update.first_name is not None:
