@@ -9,8 +9,8 @@ from datetime import datetime
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-# 🔗 URL de la landing para pago (modificable desde un solo lugar)
-LANDING_R2 = "https://tulanding.com/r2"  # ✅ CAMBIAR ESTA URL cuando esté la definitiva
+# 🌐 URL centralizada de la landing
+LANDING_R2 = "https://tu-landing.com/pago"  # 👉 actualizá esta URL cuando tengas la definitiva
 
 # 🔐 Modelo para activación por token
 class TokenActivationRequest(BaseModel):
@@ -89,23 +89,21 @@ def notificar_usuarios_lentos(db: Session = Depends(get_db)):
                 "telegram_id": usuario.telegram_id,
                 "mensaje": (
                     f"Hola {usuario.first_name}, ¡vamos que podés! Hace {dias_usados} días que activaste el protocolo R2 y aún no avanzaste. "
-                    f"Recordá que tenés 60 días para completarlo. 💪"
+                    "Recordá que tenés 60 días para completarlo. 💪"
                 )
             })
         elif dias_usados == 55:
             mensajes_enviados.append({
                 "telegram_id": usuario.telegram_id,
-                "mensaje": (
-                    f"Hola {usuario.first_name}, tu acceso al Protocolo R2 vence en 5 días. ¡Aprovechá al máximo este tiempo! 🚀"
-                )
+                "mensaje": f"Hola {usuario.first_name}, tu acceso al Protocolo R2 vence en 5 días. ¡Aprovechá al máximo este tiempo! 🚀"
             })
         elif dias_usados == 60:
             mensajes_enviados.append({
                 "telegram_id": usuario.telegram_id,
                 "mensaje": (
                     "⏳ Tu acceso al Protocolo R2 ha vencido (pasaron 60 días desde que lo activaste).\n\n"
-                    "🎁 Pero no todo está perdido. Te ofrecemos acceso preferencial al nuevo plan de Mantenimiento 365. "
-                    f"Accedé desde aquí 👉 {LANDING_R2}"
+                    "🎁 Pero no todo está perdido. Te ofrecemos acceso preferencial al nuevo plan de Mantenimiento 365. ¡No te lo pierdas!\n\n"
+                    f"👉 Accedé desde aquí: {LANDING_R2}"
                 )
             })
 
