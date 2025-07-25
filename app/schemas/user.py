@@ -25,6 +25,7 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
+    created_at: Optional[datetime]
 
     class Config:
         orm_mode = True
