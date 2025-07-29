@@ -29,4 +29,11 @@ class User(UserBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+# Nuevo esquema para respuestas
+class UserOut(UserBase):
+    id: int
+    created_at: Optional[datetime]
+
+    model_config = ConfigDict(from_attributes=True)
+
 UserInDB = User
